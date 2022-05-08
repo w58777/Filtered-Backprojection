@@ -167,19 +167,33 @@ void FBDemo::onClickedFilterBtn()
         }
     }
 
-    double *filtre = new double[2*sqrt(2)*512];
+    // R-L filter
+    double *rlfilter = new double[2*sqrt(2)*512];
     for(int i = 0; i < sqrt(2)*512-1; ++i){
-        filtre[722-i] = -2 / ((PI*PI)*(4*(i+1)*(i+1) - 1));
+        if(i % 2 == 0) rlfilter[722-i] = -4 / ((PI*PI)*(i+1)*(i+1));
+        else rlfilter[722-i] = 0;
     }
-    filtre[723] = 2 / (PI*PI);
+    rlfilter[723] = 1;
     for(int i = 0; i < sqrt(2)*512; ++i){
-        filtre[i+724] = -2 / ((PI*PI)*(4*(i+1)*(i+1) - 1));
+        if(i % 2 == 0) rlfilter[i+724] = -4 / ((PI*PI)*(i+1)*(i+1));
+        else rlfilter[i+724] = 0;
     }
 
+    // S-L filter
+    double *slfilter = new double[2*sqrt(2)*512];
+    for(int i = 0; i < sqrt(2)*512-1; ++i){
+        slfilter[722-i] = -2 / ((PI*PI)*(4*(i+1)*(i+1) - 1));
+    }
+    slfilter[723] = 2 / (PI*PI);
+    for(int i = 0; i < sqrt(2)*512; ++i){
+        slfilter[i+724] = -2 / ((PI*PI)*(4*(i+1)*(i+1) - 1));
+    }
+
+    // filt
     for(int theta = 0; theta < 180; ++theta){
         for(int i = 0; i < 724; ++i){
             for(int k = 0; k < 724; ++k){
-                FBDemo::filtSino[theta][i] += FBDemo::sinogram[theta][k] * filtre[i-k+723];
+                FBDemo::filtSino[theta][i] += FBDemo::sinogram[theta][k] * rlfilter[i-k+723];
             }
         }
     }
@@ -239,7 +253,7 @@ void FBDemo::onClickedReconBtn()
         for(int j = 0; j < 512; ++j){
             for(int theta = 0; theta < 180; ++theta){
                 int reconpos =  361.5 - (255.5 - i)*cos(theta*PI/180) - (255.5 - j)*sin(theta*PI/180);
-                FBDemo::reconImg[i][j] += FBDemo::filtSino[theta][reconpos]/4;
+                FBDemo::reconImg[i][j] += FBDemo::filtSino[theta][reconpos];
             }
         }
     }
