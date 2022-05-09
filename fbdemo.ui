@@ -20,7 +20,7 @@
    <enum>QTabWidget::Rounded</enum>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout_11">
+   <layout class="QVBoxLayout" name="verticalLayout_12">
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_7">
       <item>
@@ -226,7 +226,7 @@ color:rgb(1, 134, 209);</string>
      </layout>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_7">
+     <layout class="QHBoxLayout" name="horizontalLayout_8">
       <item>
        <spacer name="horizontalSpacer_10">
         <property name="orientation">
@@ -619,7 +619,7 @@ color:rgb(1, 134, 209);</string>
        </spacer>
       </item>
       <item>
-       <layout class="QVBoxLayout" name="verticalLayout_9">
+       <layout class="QVBoxLayout" name="verticalLayout_11">
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_4">
           <item>
@@ -706,14 +706,14 @@ color:rgb(1, 134, 209);</string>
           </property>
           <property name="sizeHint" stdset="0">
            <size>
-            <width>20</width>
-            <height>40</height>
+            <width>511</width>
+            <height>13</height>
            </size>
           </property>
          </spacer>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_8">
+         <layout class="QHBoxLayout" name="horizontalLayout_7">
           <item>
            <spacer name="horizontalSpacer_18">
             <property name="orientation">
@@ -824,27 +824,81 @@ color:rgb(1, 134, 209);</string>
            </spacer>
           </item>
           <item>
-           <widget class="QPushButton" name="filterBtn">
-            <property name="minimumSize">
-             <size>
-              <width>180</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="cursor">
-             <cursorShape>PointingHandCursor</cursorShape>
-            </property>
-            <property name="autoFillBackground">
-             <bool>false</bool>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">font: 11pt &quot;Adobe Heiti Std&quot;;
+           <layout class="QVBoxLayout" name="verticalLayout_9">
+            <item>
+             <spacer name="verticalSpacer_16">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QPushButton" name="slFilterBtn">
+              <property name="minimumSize">
+               <size>
+                <width>180</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="autoFillBackground">
+               <bool>false</bool>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">font: 11pt &quot;Adobe Heiti Std&quot;;
 </string>
-            </property>
-            <property name="text">
-             <string>Filter</string>
-            </property>
-           </widget>
+              </property>
+              <property name="text">
+               <string>S-L Filter</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="verticalSpacer_15">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QPushButton" name="rlFilterBtn">
+              <property name="styleSheet">
+               <string notr="true">font: 11pt &quot;Adobe Heiti Std&quot;;
+</string>
+              </property>
+              <property name="text">
+               <string>R-L Filter</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="verticalSpacer_17">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
           </item>
           <item>
            <spacer name="horizontalSpacer_19">
@@ -868,8 +922,8 @@ color:rgb(1, 134, 209);</string>
           </property>
           <property name="sizeHint" stdset="0">
            <size>
-            <width>20</width>
-            <height>40</height>
+            <width>511</width>
+            <height>13</height>
            </size>
           </property>
          </spacer>

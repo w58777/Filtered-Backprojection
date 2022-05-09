@@ -24,7 +24,8 @@ private slots:
     void onClickedLoadBtn();
     void onClickedParallelBtn();
     void onClickedFanBtn();
-    void onClickedFilterBtn();
+    void onClickedSLFilterBtn();
+    void onClickedRLFilterBtn();
     void onClickedReconBtn();
 
 private:
@@ -34,6 +35,7 @@ private:
     int **pixelValue;
     int **reconImg;
     double **sinogram;
+    double **fanSino;
     double **filtSino;
 
 private:

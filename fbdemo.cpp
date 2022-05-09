@@ -21,7 +21,8 @@ FBDemo::FBDemo(QWidget *parent)
     connect(ui->loadBtn,&QPushButton::clicked,this,&FBDemo::onClickedLoadBtn);
     connect(ui->parallelBtn,&QPushButton::clicked,this,&FBDemo::onClickedParallelBtn);
     connect(ui->fanBtn,&QPushButton::clicked,this,&FBDemo::onClickedParallelBtn);
-    connect(ui->filterBtn,&QPushButton::clicked,this,&FBDemo::onClickedFilterBtn);
+    connect(ui->slFilterBtn,&QPushButton::clicked,this,&FBDemo::onClickedSLFilterBtn);
+    connect(ui->rlFilterBtn,&QPushButton::clicked,this,&FBDemo::onClickedRLFilterBtn);
     connect(ui->reconBtn,&QPushButton::clicked,this,&FBDemo::onClickedReconBtn);
 }
 
@@ -98,8 +99,8 @@ void FBDemo::onClickedLoadBtn()
 void FBDemo::onClickedParallelBtn()
 {
     // Initial sinogram 180x724x2
-    FBDemo::sinogram = new double*[180]; // From 0 to 180 degrees, delta theta is 1 degree
-    for(int i = 0; i < 180; ++i){
+    FBDemo::sinogram = new double*[360]; // From 0 to 180 degrees, delta theta is 1 degree
+    for(int i = 0; i < 360; ++i){
         FBDemo::sinogram[i] = new double[sqrt(2)*512];
         for(int j = 0; j < sqrt(2)*512; ++j){
             FBDemo::sinogram[i][j] = 0.0;
@@ -107,11 +108,11 @@ void FBDemo::onClickedParallelBtn()
     }
 
     // Projection process, every pixel project to the sinogram at every angle of the source
-    for(int theta = 0; theta < 180; ++theta){
+    for(double theta = 0; theta < 180; theta += 0.5){
         for(int i = 0; i < 512; ++i){
             for(int j = 0; j < 512; ++j){
                 int sinopos =  361.5 - (255.5 - i)*cos(theta*PI/180) - (255.5 - j)*sin(theta*PI/180);
-                FBDemo::sinogram[theta][sinopos] += FBDemo::pixelValue[i][j];
+                FBDemo::sinogram[int(theta*2)][sinopos] += FBDemo::pixelValue[i][j];
             }
         }
     }
@@ -121,7 +122,7 @@ void FBDemo::onClickedParallelBtn()
     for(int i = 0; i < 512; ++i){
         tmp[i] = new double[512];
         for(int j = 0; j < 512; ++j){
-            tmp[i][j] = FBDemo::sinogram[i*180/512][j*724/512]; // Resize
+            tmp[i][j] = FBDemo::sinogram[i*360/512][j*724/512]; // Resize
         }
     }
 
@@ -154,13 +155,146 @@ void FBDemo::onClickedParallelBtn()
 
 void FBDemo::onClickedFanBtn()
 {
+    // Initial sinogram 180x724x2
+    FBDemo::sinogram = new double*[360];
+    FBDemo::fanSino = new double*[360];
+    for(int i = 0; i < 360; ++i){
+        FBDemo::sinogram[i] = new double[sqrt(2)*512];
+        FBDemo::fanSino[i] = new double[sqrt(2)*512];
+        for(int j = 0; j < sqrt(2)*512; ++j){
+            FBDemo::sinogram[i][j] = 0.0;
+            FBDemo::fanSino[i][j] = 0.0;
+        }
+    }
 
+    // Projection process, every pixel project to the sinogram at every angle of the source
+    // Assuming R equals to 256*sqrt(6), fan angle equals to 60 degrees
+    // gamma is the angle between the raythrough (x, y) and the center line of the associatedfan
+    double R = 256*sqrt(6);
+    for(int beta = 0; beta < 360; ++beta){
+        for(int i = 0; i < 512; ++i){
+            for(int j = 0; j < 512; ++j){
+                int gammapos =  ((beta%90) + atan((R*cos(beta)-i-255.5)/(R*sin(beta)-j-255.5))*180/PI) * 724 / 60;
+                FBDemo::fanSino[beta][gammapos] += FBDemo::pixelValue[i][j];
+                // Transform to parallel space
+                // theta = gamma + beta; gamma = beta -arctan((R*cos(beta)-i-255.5)/(R*sin(beta)-j-255.5))
+                int theta = 2 * (beta%90) -  atan((R*cos(beta)-i-255.5)/(R*sin(beta)-j-255.5))*180/PI;
+                // r = R * sin(gamma)
+                double r = sin(atan((R*cos(beta)-i-255.5)/(R*sin(beta)-j-255.5))) * R + 361;
+                if(r < 0 || r >= 724){}// out of range
+                FBDemo::sinogram[theta*2][int(r)] += FBDemo::pixelValue[i][j];
+            }
+        }
+    }
+
+    // Local 2D array is created to be aimed at show the sinogram
+    double **tmp = new double*[512];
+    for(int i = 0; i < 512; ++i){
+        tmp[i] = new double[512];
+        for(int j = 0; j < 512; ++j){
+            tmp[i][j] = FBDemo::fanSino[i*360/512][j*724/512]; // Resize
+        }
+    }
+
+    int max = 0;
+    for(int i = 0; i < 512; ++i){ // Find the max value
+        for(int j = 0; j < 512; ++j){
+            if(tmp[i][j]>max)max = tmp[i][j];
+        }
+    }
+    for(int i = 0; i < 512; ++i){ // Normalize the gray level range to 0~255
+        for(int j = 0; j < 512; ++j){
+            tmp[i][j] = tmp[i][j]*255/max;
+        }
+    }
+
+    // Create local QImage variable to show the sinogram
+    QImage sinoImg(512,512,QImage::Format_Grayscale8);
+    for(int i = 0; i < 512; ++i){
+        for(int j = 0; j < 512; ++j){
+            sinoImg.setPixel(i,j,qRgb(tmp[i][j]*11/32,tmp[i][j]*16/32,tmp[i][j]*5/32)); // Every rgb portion approximately match the qcolor transform standard
+        }
+    }
+
+    delete []tmp;
+
+    // Show the sinogram
+    QPixmap pixmap(QPixmap::fromImage(sinoImg));
+    ui->label_sino->setPixmap(pixmap);
 }
 
-void FBDemo::onClickedFilterBtn()
+void FBDemo::onClickedSLFilterBtn()
 {
-    FBDemo::filtSino = new double*[180];
-    for(int i = 0; i < 180; ++i){
+    FBDemo::filtSino = new double*[360];
+    for(int i = 0; i < 360; ++i){
+        FBDemo::filtSino[i] = new double[sqrt(2)*512];
+        for(int j = 0; j < sqrt(2)*512; ++j){
+            FBDemo::filtSino[i][j] = 0.0;
+        }
+    }
+
+    // S-L filter
+    double *slfilter = new double[2*sqrt(2)*512];
+    for(int i = 0; i < sqrt(2)*512-1; ++i){
+        slfilter[722-i] = -2 / ((PI*PI)*(4*(i+1)*(i+1) - 1));
+    }
+    slfilter[723] = 2 / (PI*PI);
+    for(int i = 0; i < sqrt(2)*512; ++i){
+        slfilter[i+724] = -2 / ((PI*PI)*(4*(i+1)*(i+1) - 1));
+    }
+
+    // filt
+    for(int theta = 0; theta < 360; ++theta){
+        for(int i = 0; i < 724; ++i){
+            for(int k = 0; k < 724; ++k){
+                FBDemo::filtSino[theta][i] += FBDemo::sinogram[theta][k] * slfilter[i-k+723];
+            }
+        }
+    }
+
+    // Local 2D array is created to be aimed at show the filtered sinogram
+    double **tmp = new double*[512];
+    for(int i = 0; i < 512; ++i){
+        tmp[i] = new double[512];
+        for(int j = 0; j < 512; ++j){
+            tmp[i][j] = FBDemo::filtSino[i*360/512][j*724/512]; // Resize
+        }
+    }
+
+    int max = tmp[0][0];
+    int min = tmp[0][0];
+    for(int i = 0; i < 512; ++i){ // Find the max and min value
+        for(int j = 0; j < 512; ++j){
+            if(tmp[i][j]>max)max = tmp[i][j];
+            if(tmp[i][j]<min)min = tmp[i][j];
+        }
+    }
+
+    for(int i = 0; i < 512; ++i){ // Normalize the gray level range to 0~255
+        for(int j = 0; j < 512; ++j){
+            tmp[i][j] = (tmp[i][j]-min)*255/(max-min);
+        }
+    }
+
+    // Create local QImage variable to show the sinogram
+    QImage sinoImg(512,512,QImage::Format_Grayscale8);
+    for(int i = 0; i < 512; ++i){
+        for(int j = 0; j < 512; ++j){
+            sinoImg.setPixel(i,j,qRgb(tmp[i][j]*11/32,tmp[i][j]*16/32,tmp[i][j]*5/32)); // Every rgb portion approximately match the qcolor transform standard
+        }
+    }
+
+    delete []tmp;
+
+    // Show the sinogram
+    QPixmap pixmap(QPixmap::fromImage(sinoImg));
+    ui->label_sino->setPixmap(pixmap);
+}
+
+void FBDemo::onClickedRLFilterBtn()
+{
+    FBDemo::filtSino = new double*[360];
+    for(int i = 0; i < 360; ++i){
         FBDemo::filtSino[i] = new double[sqrt(2)*512];
         for(int j = 0; j < sqrt(2)*512; ++j){
             FBDemo::filtSino[i][j] = 0.0;
@@ -179,18 +313,8 @@ void FBDemo::onClickedFilterBtn()
         else rlfilter[i+724] = 0;
     }
 
-    // S-L filter
-    double *slfilter = new double[2*sqrt(2)*512];
-    for(int i = 0; i < sqrt(2)*512-1; ++i){
-        slfilter[722-i] = -2 / ((PI*PI)*(4*(i+1)*(i+1) - 1));
-    }
-    slfilter[723] = 2 / (PI*PI);
-    for(int i = 0; i < sqrt(2)*512; ++i){
-        slfilter[i+724] = -2 / ((PI*PI)*(4*(i+1)*(i+1) - 1));
-    }
-
     // filt
-    for(int theta = 0; theta < 180; ++theta){
+    for(int theta = 0; theta < 360; ++theta){
         for(int i = 0; i < 724; ++i){
             for(int k = 0; k < 724; ++k){
                 FBDemo::filtSino[theta][i] += FBDemo::sinogram[theta][k] * rlfilter[i-k+723];
@@ -203,7 +327,7 @@ void FBDemo::onClickedFilterBtn()
     for(int i = 0; i < 512; ++i){
         tmp[i] = new double[512];
         for(int j = 0; j < 512; ++j){
-            tmp[i][j] = FBDemo::filtSino[i*180/512][j*724/512]; // Resize
+            tmp[i][j] = FBDemo::filtSino[i*360/512][j*724/512]; // Resize
         }
     }
 
@@ -251,9 +375,9 @@ void FBDemo::onClickedReconBtn()
     // Reconstruction process, pixel driven backprojection, every pixel find the value of filtered sinogram at every angle
     for(int i = 0; i < 512; ++i){
         for(int j = 0; j < 512; ++j){
-            for(int theta = 0; theta < 180; ++theta){
+            for(double theta = 0; theta < 180; theta +=0.5){
                 int reconpos =  361.5 - (255.5 - i)*cos(theta*PI/180) - (255.5 - j)*sin(theta*PI/180);
-                FBDemo::reconImg[i][j] += FBDemo::filtSino[theta][reconpos];
+                FBDemo::reconImg[i][j] += FBDemo::filtSino[int(theta*2)][reconpos];
             }
         }
     }
