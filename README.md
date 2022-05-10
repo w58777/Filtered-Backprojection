@@ -2,7 +2,7 @@
 
 This project develops a CT reconstruction simulation software based on filtered back-projection algorithm, which can generate virtual X-rays for projection, and use R-L filter or S-L filter for filtering to generate reconstructed images.
 
-- Program using C++ language programming, using Qt for interface design and software release.
+- Program using C++ programming, using Qt for interface design and software release.
 - The core steps in the program, such as projection, filtering and back-projection use self-programmed functions.
 - The software can run in different computers without a specific environment.
 - The program is extended from parallel beam to fan beam.
